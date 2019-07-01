@@ -19,12 +19,33 @@ class InsertView(GenericAPIView):
         books = json.loads(f.read())
 
         for book in books:
-            title = book['title']
-
             try:
-                publisher = Publisher.objects.get(id=book['publisher']['id'])
-            except Publisher.DoesNotExist:
-                publisher = Publisher.objects.create(id=book['publisher']['id']
-                                    ,name=book['publisher']['name'])
+                book = Book.objects.get(id=book['book_id'])
+            except Book.DoesNotExist:
 
+                title = book['title']
+                book_id = book['book_id']
+                isbn = book['isbn']
+
+                try:
+                    publisher = Publisher.objects.get(id=book['publisher']['id'])
+                except Publisher.DoesNotExist:
+                    publisher = Publisher.objects.create(id=book['publisher']['id']
+                                        ,name=book['publisher']['name'])
+
+                for subject in book['subjects']:
+
+                    try:
+                        subject = Subject.objects.get(id=subject['id'])
+                    except Subject.DoesNotExist:
+                        subject = Subject.objects.create(id=subject['id'], name=subject['title'])
+
+                for creator in book['authors']:
+                    try:
+                        creator = Creator.objects.get(id=creator['id'])
+                    except Creator.DoesNotExist:
+                        creator = Creator.objects.create(id=creator['id'],
+                                                        name=creator['name'],
+                                                        type=creator['type'])
+            
         return Response({"Done": "done"})
