@@ -40,8 +40,8 @@ class Book(models.Model):
 
     isbn = models.CharField(max_length=255, blank=True, null=True)
     price = models.PositiveIntegerField(blank=True, null=True)
-    image = models.ImageField(max_length=255, blank=True, null=True)
-    pdf = models.FileField(max_length=255, blank=True, null=True)
+    image = models.CharField(max_length=255, blank=True, null=True)
+    pdf = models.CharField(max_length=255, blank=True, null=True)
     page_count = models.PositiveIntegerField(blank=True, null=True)
     count = models.PositiveIntegerField(blank=True, null=True)
     lang = models.CharField(max_length=255, blank=True, null=True)

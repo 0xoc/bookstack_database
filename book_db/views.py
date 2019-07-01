@@ -1,8 +1,12 @@
+import django_filters
+from rest_framework.pagination import PageNumberPagination
+from rest_framework import filters
+
 from .models import *
 import json
 from django.http import HttpResponse
-from .serializers import InsertSerializer
-from rest_framework.generics import GenericAPIView
+from .serializers import InsertSerializer, BookSerializer
+from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.response import Response
 from .models import *
 import jdatetime
@@ -24,8 +28,11 @@ class InsertView(GenericAPIView):
         counter = 0
         
         for book in books:
-            try:
+
+            if counter % 100 == 0:
                 print(counter, len(books))
+
+            try:
 
                 try:
                     book = Book.objects.get(id=book['book_id'])
@@ -69,7 +76,6 @@ class InsertView(GenericAPIView):
                     else:
                         publisher = None
 
-
                     the_book = Book(
                         title=title,
                         publisher=publisher,
@@ -89,7 +95,7 @@ class InsertView(GenericAPIView):
 
                     the_book.save()
 
-                    if book['subjects']:
+                    try:
 
                         for subject in book['subjects']:
 
@@ -99,8 +105,10 @@ class InsertView(GenericAPIView):
                                 subject = Subject.objects.create(id=subject['id'], name=subject['title'])
 
                             the_book.subjects.add(subject)
+                    except:
+                        pass
 
-                    if book['authors']:
+                    try:
                         for creator in book['authors']:
                             try:
                                 creator = Creator.objects.get(id=creator['id'])
@@ -109,10 +117,35 @@ class InsertView(GenericAPIView):
                                                                 name=creator['name'],
                                                                 type=creator['type'])
                             the_book.creators.add(creator)
+                    except:
+                        pass
 
                     the_book.save()
-                    counter += 1
             except:
                 raise Exception('book id: ' + book['book_id'])
 
+            counter += 1
+
         return Response({"Done": "done"})
+
+
+class LargeResultsSetPagination(PageNumberPagination):
+    page_size = 1000
+    page_size_query_param = 'page_size'
+    max_page_size = 10000
+
+
+class StandardResultsSetPagination(PageNumberPagination):
+    page_size = 100
+    page_size_query_param = 'page_size'
+    max_page_size = 100
+
+
+class BookList(ListAPIView):
+    serializer_class = BookSerializer
+    queryset = Book.objects.all()
+    pagination_class = StandardResultsSetPagination
+    filter_backends = (filters.SearchFilter,)
+    search_fields = ['isbn', 'title', 'doe']
+
+
