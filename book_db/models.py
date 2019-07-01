@@ -4,15 +4,23 @@ class Publisher(models.Model):
     id = models.PositiveIntegerField(primary_key=True)
     name = models.CharField(max_length=255)
 
+    def __str__(self):
+        return str(self.name)
+
 class Creator(models.Model):
     id = models.PositiveIntegerField(primary_key=True)
     name = models.CharField(max_length=255)
     type = models.CharField(max_length=255)
 
+    def __str__(self):
+        return str(self.name)
+
 class Subject(models.Model):
     id = models.PositiveIntegerField(primary_key=True)
     name = models.CharField(max_length=255)
 
+    def __str__(self):
+        return str(self.name)
 
 class Book(models.Model):
     id = models.PositiveIntegerField(primary_key=True) 
@@ -33,3 +41,7 @@ class Book(models.Model):
     lang = models.CharField(max_length=255, blank=True, null=True)
     doe = models.CharField(max_length=255, blank=True, null=True)
     place = models.CharField(max_length=255, blank=True, null=True)
+
+
+    def __str__(self):
+        return str(self.title)
