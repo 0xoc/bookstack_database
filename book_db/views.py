@@ -1,4 +1,10 @@
+import sys
+from collections import OrderedDict
+
 import django_filters
+from django.core.paginator import Paginator
+from django.db.models import Q
+from django.utils.functional import cached_property
 from rest_framework.pagination import PageNumberPagination
 from rest_framework import filters
 
@@ -135,17 +141,41 @@ class LargeResultsSetPagination(PageNumberPagination):
     max_page_size = 10000
 
 
+class CustomPaginatorClass(Paginator):
+    @cached_property
+    def count(self):
+        return len(self.object_list)
+        # return sys.maxsize
+
 class StandardResultsSetPagination(PageNumberPagination):
     page_size = 100
     page_size_query_param = 'page_size'
     max_page_size = 100
+    # django_paginator_class = CustomPaginatorClass
 
+    # def get_paginated_response(self, data):
+    #     return Response(OrderedDict([
+    #         ('next', self.get_next_link()),
+    #         ('previous', self.get_previous_link()),
+    #         ('results', data)
+    #     ]))
 
 class BookList(ListAPIView):
     serializer_class = BookSerializer
-    queryset = Book.objects.all()
+    def get_queryset(self):
+        qs = self.request.GET.get('qs', None)
+        if qs:
+            qs1 = Book.objects.filter(Q(title__icontains=qs)|
+                                      Q(isbn__icontains=qs)
+                                      ).distinct()
+            qs2 = Book.objects.filter(creators__name__icontains=qs)
+            return qs1.union(qs2)
+        return Book.objects.all()
     pagination_class = StandardResultsSetPagination
-    filter_backends = (filters.SearchFilter,)
-    search_fields = ['isbn', 'title', 'doe']
+    filter_backends = (django_filters.rest_framework.DjangoFilterBackend,)
+    # filter_backends = (filters.SearchFilter, django_filters.rest_framework.DjangoFilterBackend)
+    filterset_fields = ('title',)
+    # search_fields = ['isbn', 'title', 'creators__name']
+
 
 
