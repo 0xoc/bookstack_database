@@ -1,12 +1,14 @@
 from django.db import models
 from django_jalali.db import models as jmodels
 
+
 class Publisher(models.Model):
     id = models.PositiveIntegerField(primary_key=True)
     name = models.CharField(max_length=255)
 
     def __str__(self):
         return str(self.name)
+
 
 class Creator(models.Model):
     id = models.PositiveIntegerField(primary_key=True)
@@ -16,12 +18,14 @@ class Creator(models.Model):
     def __str__(self):
         return str(self.name)
 
+
 class Subject(models.Model):
     id = models.PositiveIntegerField(primary_key=True)
     name = models.CharField(max_length=255)
 
     def __str__(self):
         return str(self.name)
+
 
 class Book(models.Model):
     id = models.PositiveIntegerField(primary_key=True) 
@@ -40,7 +44,6 @@ class Book(models.Model):
     pdf = models.FileField(max_length=255, blank=True, null=True)
     page_count = models.PositiveIntegerField(blank=True, null=True)
     count = models.PositiveIntegerField(blank=True, null=True)
-    isbn = models.CharField(max_length=255, blank=True, null=True)
     lang = models.CharField(max_length=255, blank=True, null=True)
     doe = models.CharField(max_length=255, blank=True, null=True)
     place = models.CharField(max_length=255, blank=True, null=True)
@@ -48,3 +51,15 @@ class Book(models.Model):
 
     def __str__(self):
         return str(self.title)
+
+    @property
+    def creator_string(self):
+        name = ''
+        creators = self.creators.all()
+        length = len(creators)
+        for i in range(length):
+            name += str(creators[i])
+            if i != length - 1:
+                name += ', '
+
+        return name
