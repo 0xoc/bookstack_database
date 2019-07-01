@@ -35,7 +35,7 @@ class Book(models.Model):
     issue_date = jmodels.jDateField(blank=True, null=True)
 
     isbn = models.CharField(max_length=255, blank=True, null=True)
-    price = models.CharField(max_length=255, blank=True, null=True)
+    price = models.PositiveIntegerField(blank=True, null=True)
     image = models.ImageField(max_length=255, blank=True, null=True)
     pdf = models.FileField(max_length=255, blank=True, null=True)
     page_count = models.PositiveIntegerField(blank=True, null=True)

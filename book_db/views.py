@@ -5,6 +5,7 @@ from .serializers import InsertSerializer
 from rest_framework.generics import GenericAPIView
 from rest_framework.response import Response
 from .models import *
+import jdatetime
 
 class InsertView(GenericAPIView):
     serializer_class = InsertSerializer
@@ -26,7 +27,22 @@ class InsertView(GenericAPIView):
                 title = book['title']
                 book_id = book['book_id']
                 isbn = book['isbn']
+                
+                issue_date_str = book['issue_date']
+                try:
+                    date = issue_date_str.split('/')
+                    date[0] = '13' + date[0]
 
+                    issue_date = jdatetime.date(int(date[0]), int(date[1]), int(date[2]))
+                except:
+                    issue_date = None
+                
+                try:
+                    price = int(book['price'])
+                except:
+                    price = None
+                
+                
                 try:
                     publisher = Publisher.objects.get(id=book['publisher']['id'])
                 except Publisher.DoesNotExist:
