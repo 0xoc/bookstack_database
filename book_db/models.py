@@ -1,4 +1,5 @@
 from django.db import models
+from django_jalali.db import models as jmodels
 
 class Publisher(models.Model):
     id = models.PositiveIntegerField(primary_key=True)
@@ -30,6 +31,8 @@ class Book(models.Model):
     
     subjects = models.ManyToManyField(Subject, related_name="books", blank=True)
     creators = models.ManyToManyField(Creator, related_name="books", blank=True)
+
+    issue_date = jmodels.jDateField(blank=True, null=True)
 
     isbn = models.CharField(max_length=255, blank=True, null=True)
     price = models.CharField(max_length=255, blank=True, null=True)
