@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from .models import *
 import jdatetime
 from rest_framework import status
+import pyisbn
 
 
 class InsertView(GenericAPIView):
@@ -64,6 +65,14 @@ class InsertView(GenericAPIView):
                     issue_date_str = book['issue_date']
                     volume = book['volume']
 
+                    # clean isbn does not have '-' and is converted to isbn 13
+                    isbn_clean = book['isbn'].replace('-', '')
+                    if len(isbn_clean == 10):
+                        try:
+                            isbn_clean = pyisbn.convert(isbn_clean)
+                        except:
+                            pass
+
                     try:  # issue date might be blank or in wrong format
                         date = issue_date_str.split('/')
                         date[0] = '13' + date[0]
@@ -107,7 +116,8 @@ class InsertView(GenericAPIView):
                         lang=lang,
                         place=place,
                         doe=doe,
-                        volume=volume
+                        volume=volume,
+                        isbn_clean=isbn_clean
                     )
 
                     the_book.save()
