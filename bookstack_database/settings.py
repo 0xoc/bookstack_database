@@ -79,10 +79,10 @@ WSGI_APPLICATION = 'bookstack_database.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'bookstack',
+        'NAME': 'bookstack_database',
         'USER': 'postgres',
-        'PASSWORD': 'WorkSina137512@',
-        'HOST': 'data.spsina.ir',
+        'PASSWORD': 'thecode',
+        'HOST': 'localhost',
         'PORT': '',
     }
 }

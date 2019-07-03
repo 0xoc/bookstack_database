@@ -10,6 +10,8 @@ from .models import *
 import jdatetime
 from rest_framework import status
 import pyisbn
+from django_filters import rest_framework as filters
+from .date_filters import filter_date__exact, filter_date__gt, filter_date__lt
 
 
 class InsertView(GenericAPIView):
@@ -167,59 +169,34 @@ class StandardResultsSetPagination(PageNumberPagination):
     max_page_size = 100
 
 
+class BookListFilterSet(filters.FilterSet):
+
+    issue_date = filters.DateFilter(method=filter_date__exact, field_name='issue_date', lookup_expr='exact')
+    issue_date__gt = filters.DateFilter(method=filter_date__gt, field_name='issue_date', lookup_expr='gt')
+    issue_date__lt = filters.DateFilter(method=filter_date__lt, field_name='issue_date', lookup_expr='lt')
+
+    class Meta:
+        model = Book
+        fields = {
+            'id': ['exact', ],
+            'title': ['icontains', ],
+            'publisher__name': ['icontains', ],
+            'subjects__name': ['icontains', ],
+            'creators__name': ['icontains', ],
+            'isbn': ['icontains', ],
+            'price': ['lt', 'gt'],
+            'lang': ['icontains', ],
+            'doe': ['icontains', ],
+            'place': ['icontains', ],
+            'edition': ['exact', 'lt', 'gt'],
+            'volume': ['exact', 'lt', 'gt'],
+            'isbn_clean': ['icontains', ],
+        }
+
+
 class BookList(ListAPIView):
     serializer_class = BookSerializer
-
-    def get_queryset(self):
-        qs = self.request.GET.get('qs', None)
-
-        if qs:
-            qs1 = Book.objects.filter(Q(title__icontains=qs) |
-                                      Q(isbn__icontains=qs) |
-                                      Q(lang__icontains=qs)
-                                      ).distinct()
-            qs2 = Book.objects.filter(creators__name__icontains=qs)
-            qs3 = Book.objects.filter(publisher__name__icontains=qs)
-            qs4 = Book.objects.filter(subjects__name__icontains=qs)
-            return qs1.union(qs2).union(qs3).union(qs4).order_by('-issue_date')
-        return Book.objects.all().order_by('-issue_date')
-
+    queryset = Book.objects.all().order_by('-issue_date')
     pagination_class = StandardResultsSetPagination
-    filter_backends = (django_filters.rest_framework.DjangoFilterBackend,)
-    filterset_fields = ('title', 'publisher', 'creators__name', 'subjects__name', 'isbn_clean')
-
-
-class BookFieldSearch(ListAPIView):
-    serializer_class = BookSerializer
-
-    def get_queryset(self):
-
-        # get search parameter
-
-        id = self.request.GET.get('id', None)
-        title = self.request.GET.get('title', None)
-        publisher = self.request.GET.get('publisher', None)
-
-        # todo : subjects as list
-        subjects = self.request.GET.get('subjects', None)
-
-        # todo : creators as list
-        creators = self.request.GET.get('creators', None)
-
-        # todo: date range
-        issue_date = self.request.GET.get('issue_date', None)
-
-        isbn = self.request.GET.get('isbn', None)
-
-        # todo: price as range
-        price = self.request.GET.get('price', None)
-
-        # todo: page count as range
-        # todo: count as range
-
-        lang = self.request.GET.get('lang', None)
-        doe = self.request.GET.get('doe', None)
-        place = self.request.GET.get('place', None)
-        edition = self.request.GET.get('edition', None)
-        volume = self.request.GET.get('volume', None)
-        isbn_clea = self.request.GET.get('isbn_clean', None)
+    filter_backends = (filters.DjangoFilterBackend, )
+    filter_class = BookListFilterSet
