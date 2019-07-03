@@ -1,12 +1,9 @@
-import django_filters
-from django.db.models import Q
 from rest_framework.pagination import PageNumberPagination
-from .models import *
 import json
 from .serializers import InsertSerializer, BookSerializer
 from rest_framework.generics import GenericAPIView, ListAPIView
 from rest_framework.response import Response
-from .models import *
+from .models import Book, Publisher, Subject, Creator
 import jdatetime
 from rest_framework import status
 import pyisbn
@@ -170,6 +167,10 @@ class StandardResultsSetPagination(PageNumberPagination):
 
 
 class BookListFilterSet(filters.FilterSet):
+    """
+    Book filter set class
+    filter a book by any of it's properties
+    """
 
     issue_date = filters.DateFilter(method=filter_date__exact, field_name='issue_date', lookup_expr='exact')
     issue_date__gt = filters.DateFilter(method=filter_date__gt, field_name='issue_date', lookup_expr='gt')
@@ -195,8 +196,80 @@ class BookListFilterSet(filters.FilterSet):
 
 
 class BookList(ListAPIView):
+    """
+        An endpoint for a list of all books with
+        filters
+    """
+
     serializer_class = BookSerializer
     queryset = Book.objects.all().order_by('-issue_date')
     pagination_class = StandardResultsSetPagination
     filter_backends = (filters.DjangoFilterBackend, )
     filter_class = BookListFilterSet
+
+
+class BookSearch(ListAPIView):
+    """
+        And endpoint for searching a book by an unspecified filed
+        ** VERY SLOW **
+    """
+
+    pagination_class = StandardResultsSetPagination
+    serializer_class = BookSerializer
+
+    def get_queryset(self):
+        query = self.request.query_params.get('query', None)
+
+        if not query:
+            return []
+
+        results = []
+
+        # by by id
+        try:
+            _id = int(query)
+            results += Book.objects.filter(id=_id)
+        except:
+            pass
+
+        # by title
+        results += Book.objects.filter(title__icontains=query)
+
+        # by publisher name
+        for publisher in Publisher.objects.filter(name__icontains=query):
+            results += publisher.books.all()
+
+        # by creator name
+        for creator in Creator.objects.filter(name__icontains=query):
+            results += creator.books.all()
+
+        # by subject
+        for subject in Subject.objects.filter(name__icontains=query):
+            results += subject.books.all()
+
+        # by isbn
+        try:
+            # clean the query isbn first
+            _isbn = query.replace('-', '')
+            if len(_isbn) == 10:    # convert to isbn 13
+                _isbn = pyisbn.convert(_isbn)
+
+            results += Book.objects.filter(isbn_clean__icontains=_isbn)
+        except:
+            pass
+
+        # by lang
+        results += Book.objects.filter(lang__icontains=query)
+
+        # by doe
+        results += Book.objects.filter(doe__icontains=query)
+
+        # by place
+        results += Book.objects.filter(place__icontains=query)
+
+        # union all the results together
+
+        print(results)
+
+        return results
+
