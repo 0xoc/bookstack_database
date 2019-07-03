@@ -267,9 +267,5 @@ class BookSearch(ListAPIView):
         # by place
         results += Book.objects.filter(place__icontains=query)
 
-        # union all the results together
-
-        print(results)
-
         return results
 
