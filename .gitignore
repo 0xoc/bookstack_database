@@ -9,6 +9,7 @@ __pycache__/
 *.so
 
 .idea
+static
 
 # Distribution / packaging
 .Python
