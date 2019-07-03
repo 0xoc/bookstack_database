@@ -47,5 +47,7 @@ class BookSerializer(serializers.ModelSerializer):
             'doe',
             'place',
             'edition',
+            'volume',
+            'isbn_clean'
         ]
 

@@ -25,7 +25,7 @@ class InsertView(GenericAPIView):
         :return:
         """
 
-        json_file = request.FILES.get['json_file', None]
+        json_file = request.FILES.get('json_file', None)
 
         if not json_file:
             return Response({"error": "No files"}, status=status.HTTP_400_BAD_REQUEST)
@@ -40,17 +40,16 @@ class InsertView(GenericAPIView):
         counter = 0
 
         for book in books:
-
             # show progress
-            if counter % 100 == 0:
+            if counter % 10000 == 0:
                 print(counter, len(books))
 
             try:
 
                 try:  # if the book exists dont' go through converting json
-                    book = Book.objects.get(id=book['book_id'])
+                    Book.objects.get(id=book['book_id'])
                 except Book.DoesNotExist:
-
+                    print("new book")
                     title = book['title']
                     book_id = book['book_id']
                     isbn = book['isbn']
@@ -63,6 +62,7 @@ class InsertView(GenericAPIView):
                     doe = book['doe']
                     place = book['place']
                     issue_date_str = book['issue_date']
+                    volume = book['volume']
 
                     try:  # issue date might be blank or in wrong format
                         date = issue_date_str.split('/')
@@ -107,6 +107,7 @@ class InsertView(GenericAPIView):
                         lang=lang,
                         place=place,
                         doe=doe,
+                        volume=volume
                     )
 
                     the_book.save()
@@ -165,15 +166,50 @@ class BookList(ListAPIView):
         if qs:
             qs1 = Book.objects.filter(Q(title__icontains=qs) |
                                       Q(isbn__icontains=qs) |
-                                      Q(lang__icontains=qs) |
-                                      Q(doe__icontains=qs)
+                                      Q(lang__icontains=qs)
                                       ).distinct()
             qs2 = Book.objects.filter(creators__name__icontains=qs)
             qs3 = Book.objects.filter(publisher__name__icontains=qs)
             qs4 = Book.objects.filter(subjects__name__icontains=qs)
-            return qs1.union(qs2).union(qs3).union(qs4)
-        return Book.objects.all()
+            return qs1.union(qs2).union(qs3).union(qs4).order_by('-issue_date')
+        return Book.objects.all().order_by('-issue_date')
 
     pagination_class = StandardResultsSetPagination
     filter_backends = (django_filters.rest_framework.DjangoFilterBackend,)
-    filterset_fields = ('title', 'publisher', 'creators__name', 'subjects__name')
+    filterset_fields = ('title', 'publisher', 'creators__name', 'subjects__name', 'isbn_clean')
+
+
+class BookFieldSearch(ListAPIView):
+    serializer_class = BookSerializer
+
+    def get_queryset(self):
+
+        # get search parameter
+
+        id = self.request.GET.get('id', None)
+        title = self.request.GET.get('title', None)
+        publisher = self.request.GET.get('publisher', None)
+
+        # todo : subjects as list
+        subjects = self.request.GET.get('subjects', None)
+
+        # todo : creators as list
+        creators = self.request.GET.get('creators', None)
+
+        # todo: date range
+        issue_date = self.request.GET.get('issue_date', None)
+
+        isbn = self.request.GET.get('isbn', None)
+
+        # todo: price as range
+        price = self.request.GET.get('price', None)
+
+        # todo: page count as range
+        # todo: count as range
+
+        lang = self.request.GET.get('lang', None)
+        doe = self.request.GET.get('doe', None)
+        place = self.request.GET.get('place', None)
+        edition = self.request.GET.get('edition', None)
+        volume = self.request.GET.get('volume', None)
+        isbn_clea = self.request.GET.get('isbn_clean', None)
