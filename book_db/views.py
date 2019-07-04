@@ -10,6 +10,8 @@ import pyisbn
 from django_filters import rest_framework as filters
 from .date_filters import filter_date__exact, filter_date__gt, filter_date__lt
 import requests
+import logging
+logger = logging.getLogger(__name__)
 
 
 class GetAllBookCovers(GenericAPIView):
@@ -18,14 +20,14 @@ class GetAllBookCovers(GenericAPIView):
 
     def get(self, request):
 
-        print("Getting images...")
+        logger.info("Getting images...")
 
         books = Book.objects.all()
 
-        print("Calculating Length...")
-        l = len(books)
+        logger.info("Calculating Length...")
+        l = 1099612
 
-        print("Length is: %d" % l)
+        logger.info("Length is: %d" % l)
 
         part_size = l // 10
 
@@ -35,9 +37,9 @@ class GetAllBookCovers(GenericAPIView):
         for r in ranges:
             for id in range(r[0], r[1]):
                 if books[id].image:
-                    print("Getting Image For Book Id: %d ..." % books[id].id)
+                    logger.info("Getting Image For Book Id: %d ..." % id)
                     try:
-                        f = open('media/book_cover/%d.jpg' % id, 'wb')
+                        f = open('media/book_cover/%d.jpg' % books[id].id, 'wb')
                         f.write(requests.get(books[id].image).content)
                         f.close()
                     except:
