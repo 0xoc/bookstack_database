@@ -66,3 +66,4 @@ class Book(models.Model):
                 name += ', '
 
         return name
+

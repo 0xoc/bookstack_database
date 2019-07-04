@@ -9,6 +9,41 @@ from rest_framework import status
 import pyisbn
 from django_filters import rest_framework as filters
 from .date_filters import filter_date__exact, filter_date__gt, filter_date__lt
+import requests
+
+
+class GetAllBookCovers(GenericAPIView):
+    def get_queryset(self):
+        pass
+
+    def get(self, request):
+
+        print("Getting images...")
+
+        books = Book.objects.all()
+
+        print("Calculating Length...")
+        l = len(books)
+
+        print("Length is: %d" % l)
+
+        part_size = l // 10
+
+        ranges = [(part_size * i, (i+1) * part_size) for i in range(9)]
+        ranges += [(9 * part_size, l)]
+
+        for r in ranges:
+            for id in range(r[0], r[1]):
+                if books[id].image:
+                    print("Getting Image For Book Id: %d ..." % books[id].id)
+                    try:
+                        f = open('media/book_cover/%d.jpg' % id, 'wb')
+                        f.write(requests.get(books[id].image).content)
+                        f.close()
+                    except:
+                        f = open('log.txt', 'a+')
+                        f.write('%d\n' % id)
+                        f.close()
 
 
 class InsertView(GenericAPIView):
